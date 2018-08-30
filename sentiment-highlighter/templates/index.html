@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style> /* set the CSS */
+    h1 { font-family: Arial; }
+    body { font: 12px Arial;}
+  </style>
+</head>
+<body>
+  <h1>Sentiment Word Highlighter</h1>
+  <form action='http://localhost:5000/search' method='post'>
+    Text: <br>
+    <textarea name='tweet'></textarea>
+    <br>
+    <input type='submit' value='Submit'>
+  </form>
+  <div id='graphDiv'></div>
+
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+</body>
+</html>

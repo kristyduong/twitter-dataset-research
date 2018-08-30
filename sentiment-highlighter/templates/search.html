@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+
+  body { font: 12px Arial;}
+
+  text {
+    font-family: sans-serif;
+    font-size: 12px;
+  }
+
+</style>
+</head>
+<body>
+  <h1>Sentiment Word Highlighter</h1>
+  <form action='http://localhost:5000/search' method='post'>
+    Tweet: <br>
+    <textarea name='tweet'></textarea>
+    <br>
+    <input type='submit' value='Submit'>
+  </form>
+  <svg width="1200" height="700"></svg>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script>
+
+  var graphData = {{ data.chart_data | safe }}
+
+  var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+  var margin = {top: 20, right: 20, bottom: 30, left: 20},
+  width = 960 - margin.left - margin.right,
+  height = 500 - margin.top - margin.bottom;
+
+  var svgContainer = d3.select("svg")
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  var char = d3.select("g")
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom);
+
+  var text = svgContainer.append("text");
+
+  var text = text.selectAll("tspan")
+  .data(graphData.nodes)
+  .enter()
+  .append("tspan");
+
+  var lineLengthY = 0
+  var lineLengthX = 0
+
+// Add SVG Text Element Attributes
+var textLabels = text
+.text( function (d) { 
+  return d.word + ' '; 
+})
+.attr("font-family", "sans-serif")
+.attr("font-size", "14px")
+.attr("dy", function (d) {
+  lineLengthY += d.word.length
+  if (lineLengthY > 125) {
+    lineLengthY = 0
+    return 15
+  } else {
+    return 0
+  }
+})
+.attr("x", function(d) {
+  lineLengthX += d.word.length
+  if (lineLengthX > 125) {
+    lineLengthX = 0
+    return 0
+  }
+})
+.attr("fill", function(d) { return color(d.group); })
+
+var pos = graphData.nodes.filter(function(n) {
+  return n.group == 1;
+});
+
+var neg = graphData.nodes.filter(function(n) {
+  return n.group == 2;
+});
+
+var neutral = graphData.nodes.filter(function(n) {
+  return n.group == 3;
+});
+
+var values = [pos.length, neg.length, neutral.length]
+total = pos.length + neg.length + neutral.length
+
+/******************Pie Chart******************/
+
+var radius = Math.min(width, height) / 3
+var g = svgContainer.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+
+var pie = d3.pie()
+.sort(null)
+.value(function(d) { return d; });
+
+var path = d3.arc()
+.outerRadius(radius - 10)
+.innerRadius(0);
+
+var label = d3.arc()
+.outerRadius(radius + 15)
+.innerRadius(radius + 15);
+
+var arc = g.selectAll(".arc")
+.data(pie(values))
+.enter().append("g")
+.attr("class", "arc");
+
+temp = 0
+
+arc.append("path")
+.attr("d", path)
+.attr("fill", function(d) { 
+  temp += 1
+  return color(temp); 
+});
+
+arc.append("text")
+.attr("transform", function(d) { return "translate(" + label.centroid(d) + ")"; })
+.attr("dx", "-1.5em")
+.attr("dy", "0.35em")
+.text(function(d) { return (d.data/total).toFixed(2) + "(" + d.data + ")"; });
+
+/******************Legend******************/
+
+legendValues = ['Positive', 'Negative', 'Neutral/Unclassified']
+
+var container = svgContainer.append("g").attr("transform", "translate(" + 0.7 * width + "," + height * 0.4 + ")")
+
+var legend3 = container.selectAll('.legend')
+.data(legendValues)
+.enter().append('g')
+.attr("transform", function (d, i) {
+  {
+    return "translate(0," + i * 20 + ")"
+  }
+})
+
+legend3.append('rect')
+.attr("x", 0)
+.attr("y", 0)
+.attr("width", 10)
+.attr("height", 10)
+.style("fill", function (d, i) {
+  return color(i + 1)
+})
+
+legend3.append('text')
+.attr("x", 20)
+.attr("y", 10)
+  //.attr("dy", ".35em")
+  .text(function (d, i) {
+    return d
+  })
+  .attr("class", "textselected")
+  .style("text-anchor", "start")
+  .style("font-size", 15)
+
+</script>
+</body>
+</html>
